@@ -1,0 +1,28 @@
+name: Build JARVIS APK
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Licences SDK
+        run: yes | sdkmanager --licences > /dev/null || true
+      - name: Decompresser le projet
+        run: unzip -o JarvisOffline.zip
+      - name: Pointer vers le SDK
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > JarvisOffline/local.properties
+      - name: Installer Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle-8.7-bin.zip
+      - name: Compiler l'APK
+        run: cd JarvisOffline && ../gradle-8.7/bin/gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-apk
+          path: JarvisOffline/app/build/outputs/apk/debug/app-debug.apk
